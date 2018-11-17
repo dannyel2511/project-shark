@@ -1,0 +1,8 @@
+prefix=/home/dannyel/catkin_ws/devel
+
+Name: exomars_pc
+Description: Description of exomars_pc
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dannyel/catkin_ws/devel/lib 
+Requires: 

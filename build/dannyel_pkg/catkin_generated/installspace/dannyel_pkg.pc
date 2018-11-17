@@ -1,0 +1,8 @@
+prefix=/home/dannyel/catkin_ws/install
+
+Name: dannyel_pkg
+Description: Description of dannyel_pkg
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dannyel/catkin_ws/install/lib 
+Requires: 

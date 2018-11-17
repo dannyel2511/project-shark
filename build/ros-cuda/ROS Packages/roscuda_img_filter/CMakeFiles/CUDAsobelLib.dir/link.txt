@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/dannyel/catkin_ws/devel/lib/libCUDAsobelLib.a  CMakeFiles/CUDAsobelLib.dir/src/CUDAsobelLib_generated_sobel.cu.o
+/usr/bin/ranlib /home/dannyel/catkin_ws/devel/lib/libCUDAsobelLib.a

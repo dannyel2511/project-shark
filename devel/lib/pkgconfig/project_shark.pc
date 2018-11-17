@@ -1,0 +1,8 @@
+prefix=/home/dannyel/catkin_ws/devel
+
+Name: project_shark
+Description: Description of project_shark
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dannyel/catkin_ws/devel/lib 
+Requires: 

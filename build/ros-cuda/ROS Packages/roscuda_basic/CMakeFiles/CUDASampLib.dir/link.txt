@@ -1,0 +1,2 @@
+/usr/bin/ar qc /home/dannyel/catkin_ws/devel/lib/libCUDASampLib.a  CMakeFiles/CUDASampLib.dir/src/CUDASampLib_generated_basic.cu.o
+/usr/bin/ranlib /home/dannyel/catkin_ws/devel/lib/libCUDASampLib.a

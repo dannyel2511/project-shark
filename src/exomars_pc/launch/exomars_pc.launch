@@ -1,0 +1,16 @@
+<launch>
+
+  <node pkg="joy" name="joy_node" type="joy_node">
+      <param name="dev" value="/dev/input/js1" />
+  </node>
+
+  <node pkg="exomars_pc" name="servos_ctrl" type="servos_ctrl.py" output="screen"/>
+
+  <node pkg="exomars_pc" name="motors_ctrl" type="motors_ctrl.py"/>
+
+  <node pkg="exomars_pc" name="science_ctrl" type="science_ctrl.py" output="screen" />
+
+  <node pkg="image_view" name="image_view" type="image_view" args="image:=image_raw" />
+
+
+</launch>

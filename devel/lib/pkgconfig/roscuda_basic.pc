@@ -1,0 +1,8 @@
+prefix=/home/dannyel/catkin_ws/devel
+
+Name: roscuda_basic
+Description: Description of roscuda_basic
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dannyel/catkin_ws/devel/lib 
+Requires: 

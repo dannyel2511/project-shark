@@ -1,0 +1,8 @@
+prefix=/home/dannyel/catkin_ws/install
+
+Name: super_pkg
+Description: Description of super_pkg
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dannyel/catkin_ws/install/lib 
+Requires: 

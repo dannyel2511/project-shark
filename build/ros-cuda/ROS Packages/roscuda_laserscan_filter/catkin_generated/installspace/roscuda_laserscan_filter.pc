@@ -1,0 +1,8 @@
+prefix=/home/dannyel/catkin_ws/install
+
+Name: roscuda_laserscan_filter
+Description: Description of roscuda_laserscan_filter
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/dannyel/catkin_ws/install/lib 
+Requires: 

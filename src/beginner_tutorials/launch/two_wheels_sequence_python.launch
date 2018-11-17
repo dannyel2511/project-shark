@@ -1,0 +1,9 @@
+<launch>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+    <include file="$(find two_wheels_description)/launch/spawn.launch"/>
+
+    <node pkg="beginner_tutorials" name="dannyel_talker" type="dannyel_talker.py" />
+    <node pkg="beginner_tutorials" name="gomez_listener" type="gomez_listener.py" output="screen"/>
+
+</launch>

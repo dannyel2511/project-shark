@@ -1,0 +1,8 @@
+prefix=/home/dannyel/catkin_ws/install
+
+Name: p2os_msgs
+Description: Description of p2os_msgs
+Version: 2.1.1
+Cflags: -I/home/dannyel/catkin_ws/install/include
+Libs: -L/home/dannyel/catkin_ws/install/lib 
+Requires: message_runtime std_msgs
