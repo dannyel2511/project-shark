@@ -34,8 +34,8 @@ const int enc_right_B = 25;
 /* --------------------------- Constants ---------------------------*/
 
 //Physical parameters of the robot
-const double R = 0.06;//Length from wheel to wheel [m]
-const double L = 0.55;//Radius of the wheels [m]
+const double R = 0.06;//Radius of the wheels [m]
+const double L = 0.55;//Length from wheel to wheel [m]
 
 //Counts Per Revolution of the encoders
 const int CPR = 4480;
@@ -87,19 +87,10 @@ void motors_cb( const geometry_msgs::Twist& cmd_msg){
   v = cmd_msg.linear.x;
   w = cmd_msg.angular.z;
 
-  //v *= 15;
 
   wheel_right.w = (2.0*v + w*L) / (2.0*R);
   wheel_left.w  = (2.0*v - w*L) / (2.0*R);
 
-  // Map the wheels speed to the PWM available in the Arduino
- /* wheel_right.pwm = abs(wheel_right.w) * (double)MAX_PWM/15.7;
-  wheel_left.pwm  = abs(wheel_left.w)  * (double)MAX_PWM/15.7;
-
-  // Limit the PWM output to the hardware available
-  if(wheel_right.pwm > MAX_PWM) wheel_right.pwm = MAX_PWM;
-  if(wheel_left.pwm  > MAX_PWM) wheel_left.pwm  = MAX_PWM;
-  */
 }
 
 
@@ -168,30 +159,16 @@ double compute_speed(Wheel wheel, double delta_time) {
 /*  Controller */
 double u_ant = 0, e_ant = 0;
 
+//PI controler
 int get_speed_controlled(int ref, int w_real, double delta_time) {
   // Variables for the controller
-  /*double u, y, e, kp = 3.0;
-
-  
-  ref = abs(ref);
-  y   = abs(w_real);
-  e   = ref - y;
-  u   = kp * e;
-  u   = u  * 255/15.7;//Asumming maximum speed = 15.7 rad/s = 150 rpm 
-
-  //Prevent overflow and underflow of the PWM
-  
-  
-  return (int)u;
- */
-  //PI controler
   double u, y, e;
   double ki, kp, A, B, C, T;
   ref = abs(ref);
   y   = abs(w_real);
 
-  ref = ref *  255/15.7;
-  y   = y   *  255/15.7; 
+  ref = ref *  MAX_PWM/15.7;
+  y   = y   *  MAX_PWM/15.7; 
   
   e   = ref - y;
   
@@ -323,8 +300,7 @@ void loop(){
   wheel_left.real_w  = compute_speed(wheel_left, t);
   wheel_right.real_w = compute_speed(wheel_right, t);
   
-  //publish_speed(wheel_left.real_w, wheel_right.real_w);
-  publish_speed(wheel_left.pwm, wheel_right.pwm);
+  publish_speed(wheel_left.real_w, wheel_right.real_w);
 
   // Update the number of counts of the encoder
   if (wheel_left.new_count != wheel_left.old_count) {
@@ -334,9 +310,6 @@ void loop(){
     wheel_right.old_count = wheel_right.new_count;
   }
 
-  
-  //u_ant = wheel_right.pwm;
-  //e_ant = wheel_right.w - wheel_right.real_w;
 
   
   nh.spinOnce();
