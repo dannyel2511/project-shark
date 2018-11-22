@@ -27,12 +27,12 @@ def go_backward(msg):
 
 def turn_right(msg):
     msg.Velocity = speed
-    msg.Turn = -1.0
+    msg.Turn = 1.0
     pub.publish(msg)
 
 def turn_left(msg):
     msg.Velocity = speed
-    msg.Turn = 1.0
+    msg.Turn = -1.0
     pub.publish(msg)
 
 def stop(msg):
@@ -46,7 +46,7 @@ def teleop():
     global rate
     global speed
 
-    speed = 0.25
+    speed = 0.4
 
     pub = rospy.Publisher('cmd', cmd, queue_size=10)
 
