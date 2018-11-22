@@ -6,12 +6,12 @@
   <node name="view_wheels_speed" pkg="project_shark" type="view_wheels_speed.py" output="screen"/>
 
   <!--Filter for the laser scan, to remove 180 degrees from the back -->
-  <node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter">
+  <!--<node pkg="laser_filters" type="scan_to_scan_filter_chain" output="screen" name="laser_filter">
       <rosparam command="load" file="$(find laser_filters)/examples/multiple_filters_example.yaml" />
    </node>
-
+-->
   <!--SLAM-->
-  <node pkg="tf" type="static_transform_publisher" name="static_transform_baseLink_laser" args="0.195 0 0.145 3.141592 0 0  base_link laser 10" />
+  <node pkg="tf" type="static_transform_publisher" name="static_transform_baseLink_laser" args="0.195 0 0.145 -3.141592 0 0  base_link laser 10" />
   <node pkg="tf" type="static_transform_publisher" name="static_transform_odom_baseLink" args="0 0 0 0 0 0 odom base_link 10" />
 
 
@@ -30,7 +30,6 @@
    <!-- nav2_d -->
 
    <!-- Some general parameters -->
-   <param name="use_sim_time" value="false" />
    <rosparam file="$(find project_shark)/param/ros.yaml"/>
 
 
@@ -42,9 +41,16 @@
       <rosparam file="$(find project_shark)/param/costmap.yaml" ns="local_map" />
    </node>
 
+<!-- Cosas para el cilindro -->
 
+   <include file="$(find urdf_tutorial)/launch/display.launch">
+    <arg name="model" value="$(find urdf_tutorial)/urdf/01-myfirst.urdf"/>
+  </include>
 
    <!-- RVIZ to view the visualization -->
    <node name="RVIZ" pkg="rviz" type="rviz" args=" -d $(find project_shark)/param/tutorial1.rviz" />
+
+
+
 
 </launch>

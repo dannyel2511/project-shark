@@ -1,6 +1,6 @@
 /* Program to control the Shark Robot, 
-it controls the motors, reads the encoder and establishes a communication with ROS
-Project developed during the fall of 2018
+*  it controls the motors, reads the encoder and establishes a communication with ROS
+*  Project developed during the fall of 2018
 */
 
 #define USE_USBCON //Useful to synchronize ROS and Arduino DUE
@@ -10,6 +10,8 @@ Project developed during the fall of 2018
 #include <std_msgs/String.h>
 #include <std_msgs/Float32MultiArray.h>
 #include <Encoder.h>
+#define LEFT 0
+#define RIGHT 1
 
 
 /* ------------------------- Pins declaration -----------------------*/
@@ -22,58 +24,50 @@ const int enB = 9;
 const int in3 = 6;
 const int in4 = 5;
 //Joystick pins
-const int SW_pin = 2;
-const int X_pin = A0;
-const int Y_pin = A1;
+const int SW_pin =  2;
+const int X_pin  = A0;
+const int Y_pin  = A1;
 //Encoders pins
-const int enc_left_A = 22;
-const int enc_left_B = 23;
-const int enc_right_A = 24;
-const int enc_right_B = 25;
+const int enc_left_A  = 24;
+const int enc_left_B  = 25;
+const int enc_right_A = 22;
+const int enc_right_B = 23;
 
 /* --------------------------- Constants ---------------------------*/
+// Physical parameters of the robot
+const double R = 0.06;    // Radius of the wheels [m]
+const double L = 0.55;    // Length from wheel to wheel [m]
 
-//Physical parameters of the robot
-const double R = 0.06;//Radius of the wheels [m]
-const double L = 0.55;//Length from wheel to wheel [m]
-
-//Counts Per Revolution of the encoders
-const int CPR = 4480;
-
-const int MAX_PWM = 255;
+const int CPR = 4480;     // Counts Per Revolution of the encoders
+const int MAX_PWM = 255;  // Set the maximum PWM
 
 /* --------------------- Custom data types -------------------------*/
 
-// Represents a wheel
+// To represent a wheel
 struct Wheel {
-  double w;     //Angular speed set by ROS [rad/s]
-  double real_w;//Actual speed [rad/s]
-  long new_count, old_count;//Encoder data
-  int pwm; // PWM needed to achieve the desired speed
+  double w;         // Angular speed set by ROS [rad/s]
+  double real_w;    // Actual speed [rad/s]
+  long new_count;   // Encoder data
+  long old_count;   // Encoder data
+  int pwm;          // PWM needed to achieve the desired speed
 };
 
 /* ----------------------- Globals ---------------------------------*/
 Wheel wheel_left;
 Wheel wheel_right;
 
-//Movement variables read from the Joystick
-int horizontal, vertical;
-
 // Variables to monitor the time
 unsigned long init_time, end_time;
 double t;
 
-//ROS object to manage the node
-ros::NodeHandle nh;
+int horizontal, vertical;  // Movement variables read from the Joystick
+ros::NodeHandle nh;        // ROS object to manage the node
 
 // Declaration of Publishers to ROS topics
 std_msgs::Float32MultiArray array_msg;
 ros::Publisher speed_publisher("wheels_speed", &array_msg);
 
-std_msgs::String str_msg1;
-ros::Publisher chatter2("info", &str_msg1);
-
-//Attach the pins of the encoder to the Encoder object
+// Attach the pins of the encoder to the Encoder object
 Encoder enc_left(enc_left_A, enc_left_B);
 Encoder enc_right(enc_right_A, enc_right_B);
 
@@ -87,10 +81,8 @@ void motors_cb( const geometry_msgs::Twist& cmd_msg){
   v = cmd_msg.linear.x;
   w = cmd_msg.angular.z;
 
-
   wheel_right.w = (2.0*v + w*L) / (2.0*R);
   wheel_left.w  = (2.0*v - w*L) / (2.0*R);
-
 }
 
 
@@ -101,7 +93,6 @@ void backward(int wr, int wl){
   digitalWrite(in3, LOW);
   digitalWrite(in4, HIGH);
   analogWrite(enB, wl); 
-
 }
 
 void forward(int wr, int wl){
@@ -141,7 +132,7 @@ void stopped(){
 }
 
 /* ------------------   Extra functions -----------------------------*/
-void publish_speed(double wr, double wl) {
+void publish_speed(double wl, double wr) {
   array_msg.data[0] = wl;
   array_msg.data[1] = wr;
   speed_publisher.publish(&array_msg);
@@ -156,41 +147,50 @@ double compute_speed(Wheel wheel, double delta_time) {
   w *= 2.0*PI;
   return w;
 }
-/*  Controller */
-double u_ant = 0, e_ant = 0;
+/* ------------------   PI Controller -----------------------------*/
+// Variables for the PI controller
+double u_ant_l = 0, e_ant_l = 0;
+double u_ant_r = 0, e_ant_r = 0;
+double u, y, e;
+const double ki =   5;
+const double kp = 0.5;
+double A, B, C;
 
-//PI controler
-int get_speed_controlled(int ref, int w_real, double delta_time) {
-  // Variables for the controller
-  double u, y, e;
-  double ki, kp, A, B, C, T;
-  ref = abs(ref);
-  y   = abs(w_real);
-
-  ref = ref *  MAX_PWM/15.7;
-  y   = y   *  MAX_PWM/15.7; 
-  
+// Implement a PI controller
+int get_speed_controlled(int ref, int w_real, double delta_time, int wheel) {
+  // Scale the input variable from 0 to 255
+  ref = ref *       MAX_PWM/15.7;
+  y   = w_real   *  MAX_PWM/15.7;
+  // Compute the error
   e   = ref - y;
-  
-  ki = 0.5;
-  kp = 5;
-  T = delta_time;
-  
-  A = 10000;
-  B = (kp  + (ki*T)/2.0) * 10000.0;
-  C = (-kp + (ki*T)/2.0) * 10000.0;
-  
-  u = A*u_ant + B*e + C*e_ant;
-  u = (double)(u / 10000.0); //Divide by the factor of 10,000
 
-  if(u > 255)    u = 255;
-  else if(u < 0) u =   0;
+  // Apply the logic of the PI controller
+  A = 1;
+  B = (kp  + (ki*delta_time)/2.0);
+  C = (-kp + (ki*delta_time)/2.0);
+  
+  if(wheel == LEFT) {
+    u = A*u_ant_l + B*e + C*e_ant_l;
+  }
+  if(wheel == RIGHT) {
+    u = A*u_ant_r + B*e + C*e_ant_r;
+  }
+
+  // Prevent PWM from overflow
+  if(u > 255)       u =  255;
+  else if(u < -255) u = -255;
 
   //Update values
-  e_ant = e;
-  u_ant = u;
-  
-  return (int)u;
+  if(wheel == LEFT) {
+    e_ant_l = e;
+    u_ant_l = u;
+  }
+  if(wheel == RIGHT) {
+    e_ant_r = e;
+    u_ant_r = u;
+  }
+
+  return abs(u);
 }
 
 
@@ -228,7 +228,6 @@ void setup()
 
   // Start the communication to and from topics
   nh.advertise(speed_publisher);
-  nh.advertise(chatter2);
   nh.subscribe(sub);
 }
 
@@ -237,22 +236,22 @@ void loop(){
   init_time = millis();
 
   //Read data from the Joystick in case of manual operation
-  horizontal = analogRead(Y_pin);
-  vertical   = analogRead(X_pin);
   int button = digitalRead(SW_pin); 
 
   //Manual mode operation
-  if(!button) { 
-    if      (vertical < 620){
+  if(!button) {
+    horizontal = analogRead(Y_pin);
+    vertical   = analogRead(X_pin);
+    if     (vertical < 620) {
           backward(MAX_PWM, MAX_PWM);
     }
-    else if (vertical > 900){
+    else if(vertical > 900) {
           forward(MAX_PWM, MAX_PWM);          
     }
-    else if(horizontal < 620){
+    else if(horizontal < 620) {
           turn_left(MAX_PWM, MAX_PWM); 
     }
-    else if(horizontal > 900){
+    else if(horizontal > 900) {
           turn_right(MAX_PWM, MAX_PWM);
     }
     else {
@@ -262,25 +261,31 @@ void loop(){
   else {// Teleoperation
 
       //Implement proportional control algorithm [rad/s]
-      wheel_right.pwm = get_speed_controlled(wheel_right.w, wheel_right.real_w, t);
-      wheel_left.pwm =  get_speed_controlled(wheel_left.w,  wheel_left.real_w,  t);
+      wheel_right.pwm = get_speed_controlled(wheel_right.w, wheel_right.real_w, t, LEFT);
+      wheel_left.pwm  = get_speed_controlled(wheel_left.w,  wheel_left.real_w,  t, RIGHT);
+
       
-      
-      if(wheel_right.w > 0.0 && wheel_left.w > 0.0) {
-         forward(wheel_right.pwm, wheel_left.pwm);
-      }
-      else if(wheel_right.w < 0.0 && wheel_left.w < 0.0) {
-        backward(wheel_right.pwm, wheel_left.pwm);
-      }
-      else if(wheel_right.w > 0.0 && wheel_left.w < 0.0) {
-        turn_right(wheel_right.pwm, wheel_left.pwm); 
-      }
-      else if(wheel_right.w < 0.0 && wheel_left.w > 0.0) {
-        turn_left(wheel_right.pwm, wheel_left.pwm);
+      if(wheel_right.w > 0) {
+        digitalWrite(in1, HIGH);
+        digitalWrite(in2, LOW);
+        analogWrite(enB, wheel_right.pwm);
       }
       else {
-        stopped();
+        digitalWrite(in1, LOW);
+        digitalWrite(in2, HIGH);
+        analogWrite(enB, wheel_right.pwm);
       }
+      if(wheel_left.w > 0) {
+        digitalWrite(in3, HIGH);
+        digitalWrite(in4, LOW);
+        analogWrite(enA, wheel_left.pwm);
+      }
+      else {
+        digitalWrite(in3, LOW);
+        digitalWrite(in4, HIGH);
+        analogWrite(enA, wheel_left.pwm);
+      }
+      
   }
 
   // Measure the actual wheels speed and publish the value

@@ -5,6 +5,8 @@ import math
 from nav2d_operator.msg import cmd
 import sys, select, termios, tty
 
+global speed
+
 
 def getKey():
    tty.setraw(sys.stdin.fileno())
@@ -14,23 +16,23 @@ def getKey():
    return key
 
 def go_forward(msg):
-    msg.Velocity = 0.25
+    msg.Velocity = speed
     msg.Turn = 0.0
     pub.publish(msg)
 
 def go_backward(msg):
-    msg.Velocity = -0.25
+    msg.Velocity = -speed
     msg.Turn = 0.0
     pub.publish(msg)
 
 def turn_right(msg):
-    msg.Velocity = 0.50
-    msg.Turn = 1.0
+    msg.Velocity = speed
+    msg.Turn = -1.0
     pub.publish(msg)
 
 def turn_left(msg):
-    msg.Velocity = 0.50
-    msg.Turn = -1.0
+    msg.Velocity = speed
+    msg.Turn = 1.0
     pub.publish(msg)
 
 def stop(msg):
@@ -42,6 +44,9 @@ def stop(msg):
 def teleop():
     global pub
     global rate
+    global speed
+
+    speed = 0.25
 
     pub = rospy.Publisher('cmd', cmd, queue_size=10)
 

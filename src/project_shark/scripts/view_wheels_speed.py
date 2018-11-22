@@ -16,8 +16,8 @@ def callback(data):
    array.layout.data_offset = 0
    array.data = [0]*2
 
-   wr = data.data[0]
-   wl = data.data[1]
+   wl = data.data[0]
+   wr = data.data[1]
 
 
    rospy.loginfo("Right wheel speed %f rad/s\n\r",wr)
