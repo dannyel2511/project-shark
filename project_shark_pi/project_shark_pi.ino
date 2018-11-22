@@ -152,12 +152,12 @@ double compute_speed(Wheel wheel, double delta_time) {
 double u_ant_l = 0, e_ant_l = 0;
 double u_ant_r = 0, e_ant_r = 0;
 double u, y, e;
-const double ki =   5;
-const double kp = 0.5;
+const double ki =   3;
+const double kp = 0.4;
 double A, B, C;
 
 // Implement a PI controller
-int get_speed_controlled(int ref, int w_real, double delta_time, int wheel) {
+int get_speed_controlled(double ref, double w_real, double delta_time, int wheel) {
   // Scale the input variable from 0 to 255
   ref = ref *       MAX_PWM/15.7;
   y   = w_real   *  MAX_PWM/15.7;
@@ -166,8 +166,8 @@ int get_speed_controlled(int ref, int w_real, double delta_time, int wheel) {
 
   // Apply the logic of the PI controller
   A = 1;
-  B = (kp  + (ki*delta_time)/2.0);
-  C = (-kp + (ki*delta_time)/2.0);
+  B = (kp  + (ki * delta_time)/2.0);
+  C = (-kp + (ki * delta_time)/2.0);
   
   if(wheel == LEFT) {
     u = A*u_ant_l + B*e + C*e_ant_l;
@@ -177,8 +177,14 @@ int get_speed_controlled(int ref, int w_real, double delta_time, int wheel) {
   }
 
   // Prevent PWM from overflow
-  if(u > 255)       u =  255;
-  else if(u < -255) u = -255;
+  if(ref >= 0) {
+    if(u > 255)       u =  255;
+    else if(u < 0)    u = 0;
+  }
+  if(ref < 0) {
+    if(u < -255) u = -255;
+    else if(u > 0) u = 0;
+  }
 
   //Update values
   if(wheel == LEFT) {
@@ -239,7 +245,7 @@ void loop(){
   int button = digitalRead(SW_pin); 
 
   //Manual mode operation
-  if(!button) {
+  /*if(!button) {
     horizontal = analogRead(Y_pin);
     vertical   = analogRead(X_pin);
     if     (vertical < 620) {
@@ -259,11 +265,13 @@ void loop(){
     }
   } 
   else {// Teleoperation
-
+*/
       //Implement proportional control algorithm [rad/s]
-      wheel_right.pwm = get_speed_controlled(wheel_right.w, wheel_right.real_w, t, LEFT);
-      wheel_left.pwm  = get_speed_controlled(wheel_left.w,  wheel_left.real_w,  t, RIGHT);
+      wheel_right.pwm = get_speed_controlled(wheel_right.w, wheel_right.real_w, t, RIGHT);
+      wheel_left.pwm  = get_speed_controlled(wheel_left.w,  wheel_left.real_w,  t, LEFT);
 
+      if(wheel_right.pwm > 255) wheel_right.pwm = 255;
+      if(wheel_left.pwm > 255) wheel_left.pwm = 255;
       
       if(wheel_right.w > 0) {
         digitalWrite(in1, HIGH);
@@ -285,8 +293,12 @@ void loop(){
         digitalWrite(in4, HIGH);
         analogWrite(enA, wheel_left.pwm);
       }
+
+      if(wheel_right.w == 0 && wheel_left.w == 0) {
+        stopped();
+      }
       
-  }
+ // }
 
   // Measure the actual wheels speed and publish the value
 
@@ -306,6 +318,7 @@ void loop(){
   wheel_right.real_w = compute_speed(wheel_right, t);
   
   publish_speed(wheel_left.real_w, wheel_right.real_w);
+  //publish_speed(wheel_left.pwm, wheel_right.pwm);
 
   // Update the number of counts of the encoder
   if (wheel_left.new_count != wheel_left.old_count) {
