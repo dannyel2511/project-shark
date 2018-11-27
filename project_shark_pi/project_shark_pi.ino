@@ -245,7 +245,7 @@ void loop(){
   int button = digitalRead(SW_pin); 
 
   //Manual mode operation
-  /*if(!button) {
+  if(!button) {
     horizontal = analogRead(Y_pin);
     vertical   = analogRead(X_pin);
     if     (vertical < 620) {
@@ -255,17 +255,16 @@ void loop(){
           forward(MAX_PWM, MAX_PWM);          
     }
     else if(horizontal < 620) {
-          turn_left(MAX_PWM, MAX_PWM); 
+          turn_right(MAX_PWM, MAX_PWM);
     }
     else if(horizontal > 900) {
-          turn_right(MAX_PWM, MAX_PWM);
+          turn_left(MAX_PWM, MAX_PWM); 
     }
     else {
       stopped();
     }
   } 
   else {// Teleoperation
-*/
       //Implement proportional control algorithm [rad/s]
       wheel_right.pwm = get_speed_controlled(wheel_right.w, wheel_right.real_w, t, RIGHT);
       wheel_left.pwm  = get_speed_controlled(wheel_left.w,  wheel_left.real_w,  t, LEFT);
@@ -298,7 +297,7 @@ void loop(){
         stopped();
       }
       
- // }
+  }
 
   // Measure the actual wheels speed and publish the value
 
